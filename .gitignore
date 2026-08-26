@@ -1,0 +1,39 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Guidelines
+GUIDELINE.md
+
+# Node
+node_modules/
+.next/
+out/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Test coverage
+coverage/
+htmlcov/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Build files
+dist/
+build/
