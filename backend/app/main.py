@@ -7,6 +7,8 @@ import logging
 from app.config import settings
 from app.logging_config import setup_logging
 from app.api.health import router as health_router
+from app.api.weather import router as weather_router
+from app.api.cache import router as cache_router
 
 # Setup logging
 setup_logging()
@@ -36,6 +38,8 @@ app.add_middleware(
 
 # Register routers
 app.include_router(health_router)
+app.include_router(weather_router, prefix="/api/v1")
+app.include_router(cache_router, prefix="/api/v1")
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
