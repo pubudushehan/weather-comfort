@@ -9,6 +9,7 @@ from app.logging_config import setup_logging
 from app.api.health import router as health_router
 from app.api.weather import router as weather_router
 from app.api.cache import router as cache_router
+from app.dependencies import redis_cache
 
 # Setup logging
 setup_logging()
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting up %s in %s environment...", settings.APP_NAME, settings.ENVIRONMENT)
     yield
     logger.info("Shutting down %s...", settings.APP_NAME)
+    await redis_cache.close()
 
 app = FastAPI(
     title=settings.APP_NAME,

@@ -68,3 +68,23 @@ def test_cache_status_endpoint(client: TestClient):
     raw = data["raw_cache_summary"]
     assert "hits" in raw
     assert "misses" in raw
+
+def test_endpoints_require_authentication_without_override():
+    # Fresh TestClient without dependency overrides to verify 401 Unauthorized
+    from app.main import app
+    from fastapi.testclient import TestClient
+    
+    with TestClient(app) as unauth_client:
+        # GET /health is public
+        res_health = unauth_client.get("/health")
+        assert res_health.status_code == 200
+        
+        # GET /api/v1/weather/comfort is private
+        res_comfort = unauth_client.get("/api/v1/weather/comfort")
+        assert res_comfort.status_code == 401
+        assert res_comfort.json()["detail"] == "Invalid authentication credentials"
+        
+        # GET /api/v1/cache/status is private
+        res_cache = unauth_client.get("/api/v1/cache/status")
+        assert res_cache.status_code == 401
+        assert res_cache.json()["detail"] == "Invalid authentication credentials"

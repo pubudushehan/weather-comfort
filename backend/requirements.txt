@@ -3,6 +3,6 @@ uvicorn[standard]
 httpx
 pydantic-settings
 redis
-python-jose[cryptography]
+PyJWT[crypto]>=2.8.0
 pytest
 pytest-asyncio

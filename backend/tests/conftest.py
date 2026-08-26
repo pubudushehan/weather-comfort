@@ -3,6 +3,8 @@ from unittest.mock import MagicMock, AsyncMock
 from fastapi.testclient import TestClient
 from app.main import app
 from app.dependencies import get_weather_service
+from app.utils.auth import verify_token
+from app.models.auth import TokenPayload
 from app.models.responses import ComfortWeatherResponse, CacheSummary
 from app.models.weather import CityResult, WeatherDetails, ScoreBreakdown
 
@@ -50,7 +52,14 @@ def mock_weather_service():
 
 @pytest.fixture
 def client(mock_weather_service):
+    # Set up overrides
     app.dependency_overrides[get_weather_service] = lambda: mock_weather_service
+    app.dependency_overrides[verify_token] = lambda: TokenPayload(
+        sub="auth0|mock_user_123",
+        email="mock@example.com",
+        scope="read:weather"
+    )
     with TestClient(app) as test_client:
         yield test_client
+    # Teardown overrides
     app.dependency_overrides.clear()

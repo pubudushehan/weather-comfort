@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Dict, Tuple
+from typing import Any, List, Dict, Optional, Tuple
 import logging
 
 from app.services.city_service import CityService
@@ -11,22 +11,78 @@ from app.models.responses import ComfortWeatherResponse, CacheSummary
 logger = logging.getLogger("weather-comfort")
 
 class WeatherService:
-    def __init__(self, city_service: CityService, weather_client: OpenWeatherClient) -> None:
+    def __init__(
+        self,
+        city_service: CityService,
+        weather_client: OpenWeatherClient,
+        redis_cache: Optional[Any] = None
+    ) -> None:
         self.city_service = city_service
         self.weather_client = weather_client
+        self.redis_cache = redis_cache
 
     async def get_comfort_weather_ranking(self) -> ComfortWeatherResponse:
         """
-        Loads allowed city IDs, fetches weather data, normalizes parameter values,
-        calculates Comfort Index Scores, ranks cities stably, and returns the response envelope.
+        Loads allowed city IDs, checks processed cache, checks raw cache,
+        fetches missing city weather, processes scores, and saves to cache layers.
         """
         logger.info("Initiating comfort weather ranking flow...")
 
-        # Load allowed city IDs
-        city_ids = self.city_service.get_city_ids()
+        # 1. Check processed cache
+        if self.redis_cache:
+            try:
+                cached_data = await self.redis_cache.get_json("weather:processed:all")
+                if cached_data:
+                    # Deserialize cache and mark processed HIT
+                    response = ComfortWeatherResponse.parse_obj(cached_data)
+                    response.cache.processed = "HIT"
+                    logger.info("Processed dashboard cache HIT.")
+                    return response
+            except Exception as e:
+                logger.error("Failed to read processed cache: %s", str(e))
 
-        # Fetch concurrent weather from weather client
-        successful_weather, failed_city_count = await self.weather_client.get_multiple_weather(city_ids)
+        # 2. Processed Cache MISS
+        city_ids = self.city_service.get_city_ids()
+        successful_weather: Dict[int, dict] = {}
+        missed_city_ids: List[int] = []
+        raw_hits = 0
+        raw_misses = 0
+
+        # Check raw cache for each city
+        for city_id in city_ids:
+            cached_raw = None
+            if self.redis_cache:
+                try:
+                    cached_raw = await self.redis_cache.get_json(f"weather:raw:{city_id}")
+                except Exception as e:
+                    logger.error("Failed to read raw cache for city %d: %s", city_id, str(e))
+
+            if cached_raw:
+                successful_weather[city_id] = cached_raw
+                raw_hits += 1
+                if self.redis_cache:
+                    await self.redis_cache.incr("stats:raw:hits")
+            else:
+                missed_city_ids.append(city_id)
+                raw_misses += 1
+                if self.redis_cache:
+                    await self.redis_cache.incr("stats:raw:misses")
+
+        # Fetch concurrent weather from provider for missing cities
+        failed_city_count = 0
+        if missed_city_ids:
+            logger.info("Raw cache misses: %s. Fetching from OpenWeatherMap...", missed_city_ids)
+            fetched_weather, provider_failures = await self.weather_client.get_multiple_weather(missed_city_ids)
+            failed_city_count += provider_failures
+
+            # Cache raw results
+            for city_id, raw in fetched_weather.items():
+                successful_weather[city_id] = raw
+                if self.redis_cache:
+                    try:
+                        await self.redis_cache.set_json(f"weather:raw:{city_id}", raw, ttl_seconds=300)
+                    except Exception as e:
+                        logger.error("Failed to set raw cache for city %d: %s", city_id, str(e))
 
         city_results: List[CityResult] = []
         for city_id, raw in successful_weather.items():
@@ -98,15 +154,24 @@ class WeatherService:
 
         generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
-        return ComfortWeatherResponse(
+        response = ComfortWeatherResponse(
             generated_at=generated_at,
             formula_version="v1",
             city_count=len(sorted_cities),
             failed_city_count=failed_city_count,
             cache=CacheSummary(
                 processed="MISS",
-                raw_hits=0,
-                raw_misses=len(city_ids)
+                raw_hits=raw_hits,
+                raw_misses=raw_misses
             ),
             cities=sorted_cities
         )
+
+        # Cache processed results in Redis (TTL = 60s)
+        if self.redis_cache and len(sorted_cities) > 0:
+            try:
+                await self.redis_cache.set_json("weather:processed:all", response.dict(), ttl_seconds=60)
+            except Exception as e:
+                logger.error("Failed to write processed dashboard cache: %s", str(e))
+
+        return response
