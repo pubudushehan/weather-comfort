@@ -11,11 +11,7 @@ import { ErrorState } from './error-state';
 import { EmptyState } from './empty-state';
 import { RefreshCw, Database, Clock, Info } from 'lucide-react';
 
-interface DashboardClientProps {
-  userEmail: string;
-}
-
-export default function DashboardClient({ userEmail }: DashboardClientProps) {
+export default function DashboardClient() {
   // Query comfort weather data
   const {
     data: weatherData,
@@ -47,9 +43,9 @@ export default function DashboardClient({ userEmail }: DashboardClientProps) {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
-      <DashboardHeader userEmail={userEmail} />
+      <DashboardHeader />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8 select-none">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-44 pb-12 w-full space-y-8 select-none">
         {/* Dashboard Title Panel */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
           <div>

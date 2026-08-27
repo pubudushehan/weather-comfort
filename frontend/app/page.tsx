@@ -1,7 +1,6 @@
 'use client';
 
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { useState, useEffect } from 'react';
 import {
   Compass,
   ShieldCheck,
@@ -10,32 +9,19 @@ import {
   Droplets,
   Wind,
   Cloud,
-  Menu,
-  X,
   ArrowRight,
   ChevronRight
 } from 'lucide-react';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { DashboardHeader } from '@/components/dashboard-header';
 import Image from 'next/image';
+import logoImg from '../public/Logo.png';
 
 export default function Home() {
   const { user, isLoading } = useUser();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const currentYear = new Date().getFullYear();
   const ctaUrl = user ? '/dashboard' : '/auth/login';
 
   const scrollToSection = (id: string) => {
-    setMobileMenuOpen(false);
     const element = document.getElementById(id);
     if (element) {
       const offset = 80; // height of sticky header
@@ -53,142 +39,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 transition-colors duration-300">
-      {/* Sticky Header */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
-          isScrolled
-            ? 'bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-zinc-200/80 dark:border-zinc-800/80 py-3 shadow-sm'
-            : 'bg-transparent border-transparent py-5'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            {/* Branding */}
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <Image
-                src="/Logo.png"
-                alt="WeatherComfort Analytics Logo"
-                width={32}
-                height={32}
-                className="object-contain rounded-md"
-              />
-              <span className="font-bold text-lg text-zinc-900 dark:text-zinc-50 tracking-tight flex items-center gap-1.5">
-                WeatherComfort
-                <span className="hidden sm:inline text-zinc-500 font-normal">Analytics</span>
-              </span>
-            </div>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
-              <button
-                onClick={() => scrollToSection('features')}
-                className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors cursor-pointer"
-              >
-                Features
-              </button>
-              <button
-                onClick={() => scrollToSection('how-it-works')}
-                className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors cursor-pointer"
-              >
-                How It Works
-              </button>
-              <button
-                onClick={() => scrollToSection('comfort-index')}
-                className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors cursor-pointer"
-              >
-                Comfort Index
-              </button>
-            </nav>
-
-            {/* Action Group */}
-            <div className="hidden md:flex items-center gap-4">
-              <ThemeToggle />
-              {isLoading ? (
-                <div className="w-6 h-6 border-2 border-zinc-300 dark:border-zinc-700 border-t-zinc-900 dark:border-t-zinc-100 rounded-full animate-spin" />
-              ) : user ? (
-                <a
-                  href="/dashboard"
-                  className="inline-flex items-center justify-center px-4 py-2 bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950 font-semibold rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors text-sm shadow-sm cursor-pointer"
-                >
-                  Dashboard
-                </a>
-              ) : (
-                <a
-                  href="/auth/login"
-                  className="inline-flex items-center justify-center px-4 py-2 bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950 font-semibold rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors text-sm shadow-sm cursor-pointer"
-                >
-                  Sign In
-                </a>
-              )}
-            </div>
-
-            {/* Mobile Header Buttons */}
-            <div className="flex md:hidden items-center gap-3">
-              <ThemeToggle />
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-                aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Dropdown Panel */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-6 space-y-4 shadow-lg transition-all duration-300">
-            <nav className="flex flex-col gap-4">
-              <button
-                onClick={() => scrollToSection('features')}
-                className="text-left text-base font-semibold text-zinc-700 dark:text-zinc-300 py-1"
-              >
-                Features
-              </button>
-              <button
-                onClick={() => scrollToSection('how-it-works')}
-                className="text-left text-base font-semibold text-zinc-700 dark:text-zinc-300 py-1"
-              >
-                How It Works
-              </button>
-              <button
-                onClick={() => scrollToSection('comfort-index')}
-                className="text-left text-base font-semibold text-zinc-700 dark:text-zinc-300 py-1"
-              >
-                Comfort Index
-              </button>
-            </nav>
-            <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
-              {isLoading ? (
-                <div className="w-6 h-6 border-2 border-zinc-300 dark:border-zinc-700 border-t-zinc-900 dark:border-t-zinc-100 rounded-full animate-spin" />
-              ) : user ? (
-                <a
-                  href="/dashboard"
-                  className="flex items-center justify-center w-full py-3 bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950 font-bold rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 text-sm transition-all"
-                >
-                  Dashboard
-                </a>
-              ) : (
-                <a
-                  href="/auth/login"
-                  className="flex items-center justify-center w-full py-3 bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950 font-bold rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 text-sm transition-all"
-                >
-                  Sign In
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-      </header>
+      {/* Shared Sticky Navigation Header */}
+      <DashboardHeader />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden relative">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-sky-500/10 dark:bg-sky-500/5 rounded-full blur-[140px] pointer-events-none" />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            
+
             {/* Left Content Column */}
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
 
@@ -408,7 +268,7 @@ export default function Home() {
       <section id="comfort-index" className="py-20 bg-zinc-100/50 dark:bg-zinc-900/20 border-y border-zinc-200 dark:border-zinc-900 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            
+
             {/* Left side documentation text */}
             <div className="lg:col-span-6 space-y-6">
               <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">
@@ -481,7 +341,7 @@ export default function Home() {
       {/* Final CTA Section */}
       <section className="py-20 text-center relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
-        
+
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
             Ready to compare city comfort?
@@ -511,7 +371,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <Image
-              src="/Logo.png"
+              src={logoImg}
               alt="WeatherComfort Analytics Logo"
               width={24}
               height={24}

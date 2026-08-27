@@ -11,6 +11,6 @@ export default async function DashboardPage() {
   }
 
   return (
-    <DashboardClient userEmail={session.user.email || 'user@weathercomfort.com'} />
+    <DashboardClient />
   );
 }
