@@ -22,7 +22,7 @@ export async function GET() {
 
     const data = await res.json();
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Proxy weather query failed:", error);
     return NextResponse.json(
       { detail: "Invalid authentication credentials" },

@@ -34,7 +34,6 @@ export default function DashboardClient({ userEmail }: DashboardClientProps) {
   const {
     data: cacheData,
     refetch: refetchCache,
-    isLoading: isCacheLoading
   } = useQuery({
     queryKey: ['cacheStatus'],
     queryFn: apiClient.getCacheStatus,
@@ -45,8 +44,6 @@ export default function DashboardClient({ userEmail }: DashboardClientProps) {
   const handleRefresh = async () => {
     await Promise.all([refetchWeather(), refetchCache()]);
   };
-
-  const isAnyLoading = isWeatherLoading || isCacheLoading;
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
@@ -181,28 +178,6 @@ export default function DashboardClient({ userEmail }: DashboardClientProps) {
             )}
           </>
         )}
-
-        {/* Formula Explanatory Card */}
-        <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
-          <h3 className="font-bold text-base text-zinc-900 dark:text-zinc-50 flex items-center gap-2 mb-3">
-            <Info className="w-5 h-5 text-indigo-500 shrink-0" />
-            Comfort Index Formula Rationale
-          </h3>
-          <ul className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400 leading-normal pl-5 list-disc">
-            <li>
-              <strong className="text-zinc-800 dark:text-zinc-200">Temperature (40% weight):</strong> Has the highest weight because it is typically the largest contributor to perceived outdoor comfort.
-            </li>
-            <li>
-              <strong className="text-zinc-800 dark:text-zinc-200">Humidity (25% weight):</strong> Has the second-highest weight because high humidity can make warm conditions feel more uncomfortable.
-            </li>
-            <li>
-              <strong className="text-zinc-800 dark:text-zinc-200">Wind Speed (20% weight):</strong> Receives meaningful weight because strong wind affects outdoor comfort even when temperature is otherwise ideal.
-            </li>
-            <li>
-              <strong className="text-zinc-800 dark:text-zinc-200">Cloudiness (15% weight):</strong> Receives a lower weight because cloud cover can affect preference but does not always make conditions uncomfortable.
-            </li>
-          </ul>
-        </div>
       </main>
     </div>
   );
