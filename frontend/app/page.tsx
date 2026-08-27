@@ -13,6 +13,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { DashboardHeader } from '@/components/dashboard-header';
+import { ScoreBadge } from '@/components/score-badge';
+import { ScoreBreakdown } from '@/components/score-breakdown';
 import Image from 'next/image';
 import logoImg from '../public/Logo.png';
 
@@ -86,68 +88,70 @@ export default function Home() {
 
             {/* Right Mock Card Preview Column */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="w-full max-w-[400px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xl dark:shadow-black/50 hover:scale-[1.02] transition-transform duration-300 relative group">
+              <div className="w-full max-w-[400px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xl dark:shadow-black/50 hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden flex flex-col justify-between select-none">
+                {/* Rank Indicator Badge */}
                 <div className="absolute top-0 right-0 bg-zinc-900 text-white dark:bg-zinc-800 px-4 py-1.5 rounded-bl-xl font-bold text-xs">
-                  SAMPLE PREVIEW
+                  Rank #1
                 </div>
 
-                <div className="mb-5">
-                  <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 flex items-baseline gap-1">
-                    Tokyo
-                    <span className="text-xs font-semibold text-zinc-400 uppercase">JP</span>
-                  </h3>
-                  <p className="text-xs text-zinc-500">Clear Skies</p>
+                <div>
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 flex items-baseline gap-1">
+                      Tokyo
+                      <span className="text-xs font-semibold text-zinc-400 uppercase">JP</span>
+                    </h3>
+                    <p className="text-sm text-zinc-500">Clear Skies</p>
+                  </div>
+
+                  {/* Comfort Score Dot */}
+                  <div className="mb-5">
+                    <ScoreBadge score={85.40} />
+                  </div>
+
+                  {/* Standard Weather Parameters Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 text-xs">
+                      <Thermometer className="w-4 h-4 text-orange-500 shrink-0" />
+                      <div>
+                        <div className="text-zinc-400 font-medium">Temperature</div>
+                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">22.4°C</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 text-xs">
+                      <Droplets className="w-4 h-4 text-blue-500 shrink-0" />
+                      <div>
+                        <div className="text-zinc-400 font-medium">Humidity</div>
+                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">45%</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 text-xs">
+                      <Wind className="w-4 h-4 text-teal-500 shrink-0" />
+                      <div>
+                        <div className="text-zinc-400 font-medium">Wind Speed</div>
+                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">3.2 m/s</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 text-xs">
+                      <Cloud className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <div>
+                        <div className="text-zinc-400 font-medium">Cloudiness</div>
+                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">0%</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Score badge mockup */}
-                <div className="mb-6">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-full font-bold text-sm border border-emerald-500/20">
-                    <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" />
-                    Comfort Score: 85.40
-                  </div>
-                </div>
-
-                {/* Parameter grid mockup */}
-                <div className="grid grid-cols-2 gap-3 mb-6 text-xs">
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40">
-                    <Thermometer className="w-4 h-4 text-orange-500 shrink-0" />
-                    <div>
-                      <div className="text-zinc-400">Temp</div>
-                      <div className="font-semibold">22.4°C</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40">
-                    <Droplets className="w-4 h-4 text-blue-500 shrink-0" />
-                    <div>
-                      <div className="text-zinc-400">Humidity</div>
-                      <div className="font-semibold">45%</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40">
-                    <Wind className="w-4 h-4 text-teal-500 shrink-0" />
-                    <div>
-                      <div className="text-zinc-400">Wind Speed</div>
-                      <div className="font-semibold">3.2 m/s</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40">
-                    <Cloud className="w-4 h-4 text-indigo-500 shrink-0" />
-                    <div>
-                      <div className="text-zinc-400">Clouds</div>
-                      <div className="font-semibold">0%</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Micro breakdowns */}
-                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-500">Humidity Comfort (25%)</span>
-                    <span className="font-mono font-semibold">100.00 / 100</span>
-                  </div>
-                  <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-emerald-500 h-full w-[100%]" />
-                  </div>
+                {/* Comfort Components Breakdown */}
+                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                  <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Comfort Breakdown</h4>
+                  <ScoreBreakdown
+                    breakdown={{
+                      temperature: 82.5,
+                      humidity: 100.0,
+                      wind: 92.3,
+                      cloudiness: 100.0,
+                    }}
+                  />
                 </div>
               </div>
             </div>
