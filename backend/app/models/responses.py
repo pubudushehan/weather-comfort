@@ -27,3 +27,19 @@ class RawCacheSummary(BaseModel):
 class CacheStatusResponse(BaseModel):
     processed_cache: ProcessedCacheStatus
     raw_cache_summary: RawCacheSummary
+
+class ForecastPoint(BaseModel):
+    timestamp_utc: str = Field(..., description="ISO 8601 UTC timestamp of the forecast point")
+    temperature_c: float = Field(..., description="Temperature in Celsius")
+
+class TrendCacheInfo(BaseModel):
+    status: str = Field(..., description="Cache status (HIT, MISS)")
+    ttl_seconds: Optional[int] = Field(None, description="Time to live in seconds")
+
+class TemperatureTrendResponse(BaseModel):
+    city_id: int = Field(..., description="Predefined city numeric ID")
+    city_name: str = Field(..., description="Name of the city")
+    source_interval_hours: int = Field(3, description="Forecast data resolution in hours")
+    forecast_points: List[ForecastPoint] = Field(..., description="List of forecast temperature data points")
+    generated_at: str = Field(..., description="ISO 8601 UTC timestamp when response was generated")
+    cache: TrendCacheInfo = Field(..., description="Cache information")

@@ -14,6 +14,7 @@ export const DashboardHeader: React.FC = () => {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +23,40 @@ export const DashboardHeader: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (pathname !== '/') {
+      return;
+    }
+
+    const sections = ['hero', 'features', 'how-it-works', 'comfort-index'];
+    
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, {
+      rootMargin: '-80px 0px -50% 0px',
+      threshold: 0.1,
+    });
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        observer.observe(el);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [pathname]);
+
+  const displayedActiveSection = pathname === '/' ? activeSection : '';
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     if (pathname === '/') {
@@ -75,23 +110,44 @@ export const DashboardHeader: React.FC = () => {
             <Link
               href="/#features"
               onClick={(e) => handleNavClick(e, 'features')}
-              className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+              className={`relative text-sm font-medium transition-colors py-1 ${
+                displayedActiveSection === 'features'
+                  ? 'text-sky-600 dark:text-sky-400 font-semibold'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+              }`}
             >
               Features
+              {displayedActiveSection === 'features' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-sky-600 dark:bg-sky-400 rounded-full" />
+              )}
             </Link>
             <Link
               href="/#how-it-works"
               onClick={(e) => handleNavClick(e, 'how-it-works')}
-              className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+              className={`relative text-sm font-medium transition-colors py-1 ${
+                displayedActiveSection === 'how-it-works'
+                  ? 'text-sky-600 dark:text-sky-400 font-semibold'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+              }`}
             >
               How It Works
+              {displayedActiveSection === 'how-it-works' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-sky-600 dark:bg-sky-400 rounded-full" />
+              )}
             </Link>
             <Link
               href="/#comfort-index"
               onClick={(e) => handleNavClick(e, 'comfort-index')}
-              className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+              className={`relative text-sm font-medium transition-colors py-1 ${
+                displayedActiveSection === 'comfort-index'
+                  ? 'text-sky-600 dark:text-sky-400 font-semibold'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+              }`}
             >
               Comfort Index
+              {displayedActiveSection === 'comfort-index' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-sky-600 dark:bg-sky-400 rounded-full" />
+              )}
             </Link>
           </nav>
 
@@ -150,21 +206,33 @@ export const DashboardHeader: React.FC = () => {
             <Link
               href="/#features"
               onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, 'features'); }}
-              className="text-left text-base font-semibold text-zinc-700 dark:text-zinc-300 py-1"
+              className={`text-left text-base font-semibold py-1 transition-colors ${
+                displayedActiveSection === 'features'
+                  ? 'text-sky-600 dark:text-sky-400'
+                  : 'text-zinc-700 dark:text-zinc-300'
+              }`}
             >
               Features
             </Link>
             <Link
               href="/#how-it-works"
               onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, 'how-it-works'); }}
-              className="text-left text-base font-semibold text-zinc-700 dark:text-zinc-300 py-1"
+              className={`text-left text-base font-semibold py-1 transition-colors ${
+                displayedActiveSection === 'how-it-works'
+                  ? 'text-sky-600 dark:text-sky-400'
+                  : 'text-zinc-700 dark:text-zinc-300'
+              }`}
             >
               How It Works
             </Link>
             <Link
               href="/#comfort-index"
               onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, 'comfort-index'); }}
-              className="text-left text-base font-semibold text-zinc-700 dark:text-zinc-300 py-1"
+              className={`text-left text-base font-semibold py-1 transition-colors ${
+                displayedActiveSection === 'comfort-index'
+                  ? 'text-sky-600 dark:text-sky-400'
+                  : 'text-zinc-700 dark:text-zinc-300'
+              }`}
             >
               Comfort Index
             </Link>

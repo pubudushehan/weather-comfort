@@ -45,7 +45,7 @@ export default function Home() {
       <DashboardHeader />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden relative">
+      <section id="hero" className="pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden relative">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-sky-500/10 dark:bg-sky-500/5 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

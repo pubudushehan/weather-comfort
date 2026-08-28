@@ -112,3 +112,63 @@ class OpenWeatherClient:
                 successful_results[cid] = data
 
         return successful_results, failed_count
+
+    async def get_forecast_weather(self, city_id: int) -> dict:
+        """
+        Fetch 5-day / 3-hour forecast for a single city from OpenWeatherMap.
+        """
+        base_url = settings.OPENWEATHER_BASE_URL
+        api_key = settings.OPENWEATHER_API_KEY
+        timeout = settings.OPENWEATHER_TIMEOUT_SECONDS
+
+        params = {
+            "id": city_id,
+            "appid": api_key,
+            "units": "metric"
+        }
+
+        logger.debug("Fetching forecast for city_id: %d from OpenWeatherMap", city_id)
+
+        if self._client is not None:
+            try:
+                response = await self._client.get(
+                    f"{base_url}/forecast",
+                    params=params,
+                    timeout=timeout
+                )
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                status_code = e.response.status_code
+                logger.error("OpenWeatherMap returned HTTP status %d for forecast of city %d", status_code, city_id)
+                raise OpenWeatherProviderError(
+                    f"Weather provider returned status {status_code} for city {city_id}",
+                    status_code=status_code
+                ) from e
+            except (httpx.RequestError, httpx.TimeoutException) as e:
+                logger.error("Connection or timeout failure querying OpenWeatherMap forecast for city %d: %s", city_id, str(e))
+                raise OpenWeatherProviderError(
+                    f"Failed to connect to weather provider for city {city_id}: {str(e)}"
+                ) from e
+        else:
+            try:
+                async with httpx.AsyncClient() as async_client:
+                    response = await async_client.get(
+                        f"{base_url}/forecast",
+                        params=params,
+                        timeout=timeout
+                    )
+                    response.raise_for_status()
+                    return response.json()
+            except httpx.HTTPStatusError as e:
+                status_code = e.response.status_code
+                logger.error("OpenWeatherMap returned HTTP status %d for forecast of city %d", status_code, city_id)
+                raise OpenWeatherProviderError(
+                    f"Weather provider returned status {status_code} for city {city_id}",
+                    status_code=status_code
+                ) from e
+            except (httpx.RequestError, httpx.TimeoutException) as e:
+                logger.error("Connection or timeout failure querying OpenWeatherMap forecast for city %d: %s", city_id, str(e))
+                raise OpenWeatherProviderError(
+                    f"Failed to connect to weather provider for city {city_id}: {str(e)}"
+                ) from e

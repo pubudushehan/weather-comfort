@@ -2,12 +2,14 @@ import React from 'react';
 import { CityResult } from '../lib/api-client';
 import { ScoreBadge } from './score-badge';
 import { ScoreBreakdown } from './score-breakdown';
+import { TrendingUp } from 'lucide-react';
 
 interface WeatherTableProps {
   cities: CityResult[];
+  onViewTrend: (cityId: number, cityName: string) => void;
 }
 
-export const WeatherTable: React.FC<WeatherTableProps> = ({ cities }) => {
+export const WeatherTable: React.FC<WeatherTableProps> = ({ cities, onViewTrend }) => {
   return (
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden w-full">
       <div className="overflow-x-auto">
@@ -33,7 +35,16 @@ export const WeatherTable: React.FC<WeatherTableProps> = ({ cities }) => {
                   <div className="text-xs text-zinc-400 uppercase font-medium">{city.country}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <ScoreBadge score={city.comfort_score} />
+                  <div>
+                    <ScoreBadge score={city.comfort_score} /><br /><br />
+                    <button
+                      onClick={() => onViewTrend(city.city_id, city.city_name)}
+                      className="px-2 py-1 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800/40 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-2xs font-semibold transition-all active:scale-98 cursor-pointer flex items-center gap-1 shadow-sm shrink-0"
+                    >
+                      <TrendingUp className="w-3 h-3 text-sky-500" />
+                      <span>Trend</span>
+                    </button>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap capitalize text-zinc-600 dark:text-zinc-300">
                   {city.weather.description}

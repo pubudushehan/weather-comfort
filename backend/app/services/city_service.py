@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from typing import List
+from typing import List, Optional
 
 logger = logging.getLogger("weather-comfort")
 
@@ -99,3 +99,20 @@ class CityService:
             
         logger.info("Successfully loaded %d unique city IDs", len(unique_city_ids))
         return unique_city_ids
+
+    def get_city_name(self, city_id: int) -> Optional[str]:
+        """
+        Retrieves the name of a city by its ID from cities.json.
+        """
+        if not os.path.exists(self.file_path):
+            return None
+        try:
+            with open(self.file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            city_list = data.get("List", [])
+            for item in city_list:
+                if int(item.get("CityCode", 0)) == city_id:
+                    return item.get("CityName")
+        except Exception as e:
+            logger.error("Failed to read city name for %d: %s", city_id, str(e))
+        return None

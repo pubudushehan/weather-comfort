@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
 import { DashboardHeader } from './dashboard-header';
@@ -10,8 +10,13 @@ import { LoadingState } from './loading-state';
 import { ErrorState } from './error-state';
 import { EmptyState } from './empty-state';
 import { RefreshCw, Database, Clock, Info } from 'lucide-react';
+import Image from 'next/image';
+import logoImg from '../public/Logo.png';
+import { TrendModal } from './trend-modal';
 
 export default function DashboardClient() {
+  const [trendCity, setTrendCity] = useState<{ id: number; name: string } | null>(null);
+  const currentYear = new Date().getFullYear();
   // Query comfort weather data
   const {
     data: weatherData,
@@ -77,53 +82,6 @@ export default function DashboardClient() {
           </button>
         </div>
 
-        {/* Cache Summary Status Banner */}
-        {cacheData && (
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-            <div className="space-y-1">
-              <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider flex items-center gap-1">
-                <Database className="w-3.5 h-3.5 text-zinc-400" />
-                Processed Cache Key
-              </div>
-              <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 font-mono truncate">
-                {cacheData.processed_cache.key}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
-                Processed Cache Status
-              </div>
-              <div className="text-sm">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
-                  cacheData.processed_cache.status === 'HIT'
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400'
-                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400'
-                }`}>
-                  {cacheData.processed_cache.status}
-                </span>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
-                Processed Cache TTL
-              </div>
-              <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
-                {cacheData.processed_cache.ttl_seconds !== null
-                  ? `${cacheData.processed_cache.ttl_seconds}s remaining`
-                  : 'Expired/None'}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
-                Raw Weather Cache hitrate
-              </div>
-              <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
-                Hits: {cacheData.raw_cache_summary.hits} / Misses: {cacheData.raw_cache_summary.misses}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Loading and Error States */}
         {isWeatherLoading && <LoadingState />}
         
@@ -158,23 +116,111 @@ export default function DashboardClient() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {weatherData.cities.slice(0, 3).map((city) => (
-                      <WeatherCard key={city.city_id} city={city} />
+                      <WeatherCard 
+                        key={city.city_id} 
+                        city={city} 
+                        onViewTrend={(id, name) => setTrendCity({ id, name })} 
+                      />
                     ))}
                   </div>
                 </div>
+
+                {/* Cache Summary Status Banner */}
+                {cacheData && (
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                    <div className="space-y-1">
+                      <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider flex items-center gap-1">
+                        <Database className="w-3.5 h-3.5 text-zinc-400" />
+                        Processed Cache Key
+                      </div>
+                      <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 font-mono truncate">
+                        {cacheData.processed_cache.key}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
+                        Processed Cache Status
+                      </div>
+                      <div className="text-sm">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
+                          cacheData.processed_cache.status === 'HIT'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400'
+                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400'
+                        }`}>
+                          {cacheData.processed_cache.status}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
+                        Processed Cache TTL
+                      </div>
+                      <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+                        {cacheData.processed_cache.ttl_seconds !== null
+                          ? `${cacheData.processed_cache.ttl_seconds}s remaining`
+                          : 'Expired/None'}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">
+                        Raw Weather Cache hitrate
+                      </div>
+                      <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+                        Hits: {cacheData.raw_cache_summary.hits} / Misses: {cacheData.raw_cache_summary.misses}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Complete Rankings list */}
                 <div>
                   <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 tracking-tight mb-4">
                     Full City Rankings
                   </h3>
-                  <WeatherTable cities={weatherData.cities} />
+                  <WeatherTable 
+                    cities={weatherData.cities} 
+                    onViewTrend={(id, name) => setTrendCity({ id, name })} 
+                  />
                 </div>
               </div>
             )}
           </>
         )}
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 transition-colors mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2">
+            <Image
+              src={logoImg}
+              alt="WeatherComfort Analytics Logo"
+              width={24}
+              height={24}
+              className="object-contain rounded"
+            />
+            <span className="font-bold text-sm text-zinc-900 dark:text-zinc-50 tracking-tight">
+              WeatherComfort Analytics
+            </span>
+          </div>
+
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm text-center md:text-left leading-normal">
+            Real-time multi-city comfort analysis and index ranking pipeline, engineered securely on the backend.
+          </p>
+
+          <div className="flex items-center gap-6 text-xs text-zinc-500 dark:text-zinc-400">
+            <span>© {currentYear} WeatherComfort Analytics. All rights reserved.</span>
+          </div>
+        </div>
+      </footer>
+      {/* Trend Modal Overlay */}
+      {trendCity && (
+        <TrendModal
+          cityId={trendCity.id}
+          cityName={trendCity.name}
+          onClose={() => setTrendCity(null)}
+        />
+      )}
     </div>
   );
 }

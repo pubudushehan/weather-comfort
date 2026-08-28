@@ -25,15 +25,16 @@ WeatherComfort Analytics is a secure, full-stack weather analytics application t
 18. [Authentication and Authorization Design](#authentication-and-authorization-design)
 19. [Frontend UX](#frontend-ux)
 20. [Testing](#testing)
-21. [Linting, Type Checking, and Build](#linting-type-checking-and-build)
-22. [Security](#security)
-23. [Error Handling and Resilience](#error-handling-and-resilience)
-24. [Deployment](#deployment)
-25. [Trade-offs and Design Decisions](#trade-offs-and-design-decisions)
-26. [Known Limitations](#known-limitations)
-27. [Future Improvements](#future-improvements)
-28. [Project Verification Checklist](#project-verification-checklist)
-29. [Assignment Submission Notes](#assignment-submission-notes)
+21. [Temperature Trend Graphs](#temperature-trend-graphs)
+22. [Linting, Type Checking, and Build](#linting-type-checking-and-build)
+23. [Security](#security)
+24. [Error Handling and Resilience](#error-handling-and-resilience)
+25. [Deployment](#deployment)
+26. [Trade-offs and Design Decisions](#trade-offs-and-design-decisions)
+27. [Known Limitations](#known-limitations)
+28. [Future Improvements](#future-improvements)
+29. [Project Verification Checklist](#project-verification-checklist)
+30. [Assignment Submission Notes](#assignment-submission-notes)
 
 ---
 
@@ -126,7 +127,6 @@ flowchart TD
 weather-comfort/
 ├── docker-compose.yml           # Multi-container orchestration
 ├── README.md                     # Documentation overview
-├── GUIDELINE.md                  # Development guidelines and criteria
 │
 ├── backend/                      # FastAPI Application
 │   ├── app/
@@ -495,6 +495,14 @@ Check processed cache (weather:processed:all)
 
 ---
 
+## Temperature Trend Graphs
+* **Backend Forecast Endpoint**: Exposes a secure API endpoint (`GET /api/v1/weather/cities/{city_id}/temperature-trend`) that requires Auth0 authentication and verifies the city code is present in the approved allowlist.
+* **Forecast Query**: Retrieves weather forecasts using the OpenWeatherMap 5-day / 3-hour forecast API (`/forecast`), returning the next 24 hours of data represented as 8 data points at 3-hour intervals. Note that this is forecast data, not historical data.
+* **Forecast Cache**: Saves the raw forecast data under a dedicated Redis cache key (`weather:forecast:{city_id}`) with a Time-to-Live (TTL) of 900 seconds (15 minutes).
+* **Responsive Line Charts**: Displays forecast trends inside a modal overlay when the user clicks the "View temperature trend" button on any city card or ranking list row. The chart uses Recharts to render Celsius values over time with adaptive themes, interactive tooltips, loading skeleton screens, retry error handlers, and min/max summarized bounds.
+
+---
+
 ## Linting, Type Checking, and Build
 To verify type integrity and style guides before committing, execute:
 ```bash
@@ -567,7 +575,8 @@ No public deployment is currently included. The project can be run locally using
 - [x] Server-side caching (raw and processed) is functional.
 - [x] Cache debug endpoint `/api/v1/cache/status` is accurate.
 - [x] Light and dark modes toggle and persist.
-- [x] Pytest suite passes successfully (31/31 passed).
+- [x] Pytest suite passes successfully (37/37 passed).
+- [x] Temperature trend forecast graphs show next 24 hours (8 points, 15-minute cache).
 - [x] Docker Compose launches the full stack cleanly.
 - [x] No secrets or API keys are committed.
 

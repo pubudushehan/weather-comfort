@@ -2,13 +2,14 @@ import React from 'react';
 import { CityResult } from '../lib/api-client';
 import { ScoreBadge } from './score-badge';
 import { ScoreBreakdown } from './score-breakdown';
-import { Thermometer, Droplets, Wind, Cloud } from 'lucide-react';
+import { Thermometer, Droplets, Wind, Cloud, TrendingUp } from 'lucide-react';
 
 interface WeatherCardProps {
   city: CityResult;
+  onViewTrend: (cityId: number, cityName: string) => void;
 }
 
-export const WeatherCard: React.FC<WeatherCardProps> = ({ city }) => {
+export const WeatherCard: React.FC<WeatherCardProps> = ({ city, onViewTrend }) => {
   return (
     <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
       {/* Rank Indicator Badge */}
@@ -63,10 +64,21 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ city }) => {
         </div>
       </div>
 
-      {/* Comfort Components Breakdown */}
-      <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
-        <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Comfort Breakdown</h4>
-        <ScoreBreakdown breakdown={city.score_breakdown} />
+      <div className="space-y-4">
+        {/* Comfort Components Breakdown */}
+        <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
+          <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Comfort Breakdown</h4>
+          <ScoreBreakdown breakdown={city.score_breakdown} />
+        </div>
+
+        {/* View Trend Button */}
+        <button
+          onClick={() => onViewTrend(city.city_id, city.city_name)}
+          className="w-full py-2.5 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800/40 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+        >
+          <TrendingUp className="w-3.5 h-3.5 text-sky-500" />
+          <span>View Temperature Trend</span>
+        </button>
       </div>
     </div>
   );

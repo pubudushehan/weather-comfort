@@ -82,6 +82,25 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json();
 }
 
+export interface ForecastPoint {
+  timestamp_utc: string;
+  temperature_c: number;
+}
+
+export interface TrendCacheInfo {
+  status: string;
+  ttl_seconds: number | null;
+}
+
+export interface TemperatureTrendResponse {
+  city_id: number;
+  city_name: string;
+  source_interval_hours: number;
+  forecast_points: ForecastPoint[];
+  generated_at: string;
+  cache: TrendCacheInfo;
+}
+
 export const apiClient = {
   async getComfortWeather(): Promise<ComfortWeatherResponse> {
     const res = await fetch('/api/weather/comfort');
@@ -91,5 +110,10 @@ export const apiClient = {
   async getCacheStatus(): Promise<CacheStatusResponse> {
     const res = await fetch('/api/cache/status');
     return handleResponse<CacheStatusResponse>(res);
+  },
+
+  async getTemperatureTrend(cityId: number): Promise<TemperatureTrendResponse> {
+    const res = await fetch(`/api/weather/cities/${cityId}/temperature-trend`);
+    return handleResponse<TemperatureTrendResponse>(res);
   }
 };
