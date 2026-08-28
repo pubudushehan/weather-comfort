@@ -25,13 +25,12 @@ WeatherComfort Analytics is a secure, full-stack weather analytics application t
 18. [Authentication and Authorization Design](#authentication-and-authorization-design)
 19. [Frontend UX](#frontend-ux)
 20. [Testing](#testing)
-21. [Temperature Trend Graphs](#temperature-trend-graphs)
-22. [Linting, Type Checking, and Build](#linting-type-checking-and-build)
-23. [Security](#security)
-24. [Trade-offs and Design Decisions](#trade-offs-and-design-decisions)
-25. [Known Limitations](#known-limitations)
-26. [Future Improvements](#future-improvements)
-27. [Project Verification Checklist](#project-verification-checklist)
+21. [Linting, Type Checking, and Build](#linting-type-checking-and-build)
+22. [Security](#security)
+23. [Trade-offs and Design Decisions](#trade-offs-and-design-decisions)
+24. [Known Limitations](#known-limitations)
+25. [Future Improvements](#future-improvements)
+26. [Project Verification Checklist](#project-verification-checklist)
 
 ---
 
@@ -531,14 +530,6 @@ Return TemperatureTrendResponse with cache.status and cache.ttl_seconds
   source .venv/bin/activate
   pytest tests/test_comfort_index.py -v
   ```
-
----
-
-## Temperature Trend Graphs
-* **Backend Forecast Endpoint**: Exposes a secure API endpoint (`GET /api/v1/weather/cities/{city_id}/temperature-trend`) that requires Auth0 authentication and verifies the city code is present in the approved allowlist.
-* **Forecast Query**: Retrieves weather forecasts using the OpenWeatherMap 5-day / 3-hour forecast API (`/forecast`), returning the next 24 hours of data represented as 8 data points at 3-hour intervals. Note that this is forecast data, not historical data.
-* **Forecast Cache**: Uses the third Redis cache layer — key `weather:forecast:{city_id}`, TTL **900 seconds (15 minutes)**. See [Caching Design](#caching-design) for the full flow.
-* **Responsive Line Charts**: Displays forecast trends inside a modal overlay when the user clicks the "View temperature trend" button on any city card or ranking list row. The chart uses Recharts to render Celsius values over time with adaptive themes, interactive tooltips, loading skeleton screens, retry error handlers, min/max summarized bounds, and a forecast cache status badge (`HIT`/`MISS` + TTL).
 
 ---
 
