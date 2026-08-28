@@ -28,12 +28,10 @@ WeatherComfort Analytics is a secure, full-stack weather analytics application t
 21. [Temperature Trend Graphs](#temperature-trend-graphs)
 22. [Linting, Type Checking, and Build](#linting-type-checking-and-build)
 23. [Security](#security)
-24. [Error Handling and Resilience](#error-handling-and-resilience)
-25. [Deployment](#deployment)
-26. [Trade-offs and Design Decisions](#trade-offs-and-design-decisions)
-27. [Known Limitations](#known-limitations)
-28. [Future Improvements](#future-improvements)
-29. [Project Verification Checklist](#project-verification-checklist)
+24. [Trade-offs and Design Decisions](#trade-offs-and-design-decisions)
+25. [Known Limitations](#known-limitations)
+26. [Future Improvements](#future-improvements)
+27. [Project Verification Checklist](#project-verification-checklist)
 
 ---
 
@@ -48,9 +46,9 @@ To maintain strict security boundaries and application integrity, all math calcu
 * **Predefined City Registry**: City identifiers are loaded securely on the backend from [cities.json](file:///Users/pubudushehan/Desktop/Programming/weather-comfort/backend/app/data/cities.json) containing at least 10 valid city codes.
 * **Backend Comfort Calculations**: Current weather data is retrieved from OpenWeatherMap, and normalized component ratings are computed on the server.
 * **Three-Layer Redis Caching**: Minimizes OpenWeatherMap calls and dashboard latency using separate cache layers:
-  - **Raw current weather** (`weather:raw:{city_id}`) — 300 seconds (5 minutes).
-  - **Processed comfort rankings** (`weather:processed:all`) — 60 seconds (1 minute).
-  - **Forecast / temperature trend** (`weather:forecast:{city_id}`) — 900 seconds (15 minutes).
+  - **Raw current weather** - 300 seconds (5 minutes).
+  - **Processed comfort rankings** - 60 seconds (1 minute).
+  - **Forecast / temperature trend** - 900 seconds (15 minutes).
 * **Cache Telemetry**: Dashboard cache stats via `/api/v1/cache/status` (processed TTL + raw hit/miss counters). Per-request cache HIT/MISS and TTL are also returned in comfort and temperature-trend API responses and shown in the UI.
 * **Identity Management & MFA**: Integration with Auth0 to support user logins, sign-outs, and multi-factor authentication (MFA).
 * **Responsive Dashboard**: Fully adaptive user interface supporting mobile and desktop views, unified theme selections (light/dark modes), and persistent UI preferences.
@@ -90,17 +88,6 @@ flowchart TD
     B -->|API GET Key Auth| O[OpenWeatherMap API]
     B -->|Load Allowlist| C[cities.json]
 ```
-
-### Responsibility Breakdown
-* **Next.js Frontend**: Manages browser-facing interactions, enforces client-side route guards, performs OAuth authentication handshakes, and queries the backend.
-* **FastAPI Backend**: Acts as the single source of truth for the Comfort Index calculations, handles JWT validation, connects to Redis, and queries OpenWeatherMap.
-* **Redis**: Acts as the server-side cache authority, storing raw weather payloads, processed ranking responses, and per-city forecast data to prevent API rate-limit exhaustion and reduce query latency.
-* **Auth0**: Manages user identity verification, enforces Multi-Factor Authentication (MFA), and handles user account registrations securely.
-* **OpenWeatherMap**: Serves as the primary external data provider for current meteorological data.
-
-> [!IMPORTANT]
-> The frontend never calls the OpenWeatherMap API directly, nor does it calculate the Comfort Index. The OpenWeatherMap API key is kept completely secret and is only accessed by the backend.
-
 ---
 
 ## Request Flow
@@ -182,9 +169,6 @@ weather-comfort/
 ---
 
 ## Environment Variables
-
-> [!WARNING]
-> Never commit `.env` or `.env.local` files to source control. They contain private API keys, client secrets, and session salts. Always copy configuration keys from the `.example` files and populate them locally.
 
 ### Backend Environment (`backend/.env`)
 ```env
@@ -449,10 +433,10 @@ This is not a medical, occupational, or universal physiological comfort standard
 
 The Comfort Index turns different weather conditions into one score from 0 to 100, making it easy to compare which city feels most pleasant right now. Each input maps to a common outdoor-comfort signal:
 
-* **Temperature** — the baseline thermal signal people notice first.
-* **Humidity** — shifts how warm or sticky the air feels at a given temperature.
-* **Wind** — can improve comfort with light airflow, but strong wind reduces it outdoors.
-* **Cloudiness** — affects sun exposure and brightness; useful as a secondary environmental modifier.
+* **Temperature** - the baseline thermal signal people notice first.
+* **Humidity** - shifts how warm or sticky the air feels at a given temperature.
+* **Wind** - can improve comfort with light airflow, but strong wind reduces it outdoors.
+* **Cloudiness** - affects sun exposure and brightness; useful as a secondary environmental modifier.
 
 ### Reasoning Behind Variable Weights
 
@@ -467,8 +451,6 @@ Weights were chosen to reflect **perceived impact**, not equal mathematical impo
 
 **Design intent:** prioritize the factors users most strongly associate with “comfortable weather,” while keeping the formula transparent enough to show a per-component breakdown on the dashboard.
 
-**What was intentionally not weighted:** composite indices such as heat index, wind chill, or UTCI were avoided in v1 to keep the scoring logic simple, inspectable, and easy to unit test.
-
 ---
 
 ## Caching Design
@@ -482,8 +464,6 @@ Server-side caching minimizes latency, avoids redundant OpenWeatherMap calls, an
 | **Raw current weather** | `weather:raw:{city_id}` | 300s (5 min) | Stores the raw OpenWeatherMap `/weather` JSON per city | Comfort ranking flow |
 | **Processed rankings** | `weather:processed:all` | 60s (1 min) | Stores the fully ranked comfort dashboard response | `GET /api/v1/weather/comfort` |
 | **Forecast trend** | `weather:forecast:{city_id}` | 900s (15 min) | Stores the raw OpenWeatherMap `/forecast` JSON per city | `GET /api/v1/weather/cities/{city_id}/temperature-trend` |
-
-Raw and processed TTLs are configurable via `CACHE_RAW_TTL_SECONDS` and `CACHE_PROCESSED_TTL_SECONDS`. Forecast TTL is currently hardcoded to `900` seconds in `WeatherService`.
 
 ### Comfort Ranking Cache Flow
 
@@ -518,15 +498,6 @@ Check forecast cache (weather:forecast:{city_id})
 Extract next 8 points (24 hours at 3-hour intervals)
 Return TemperatureTrendResponse with cache.status and cache.ttl_seconds
 ```
-
-### Cache Telemetry
-
-| Surface | What it reports |
-|---|---|
-| **`GET /api/v1/cache/status`** | Processed cache key (`weather:processed:all`), HIT/MISS, TTL; cumulative raw cache hits/misses (`stats:raw:hits`, `stats:raw:misses`) |
-| **`GET /api/v1/weather/comfort` response** | Per-request processed HIT/MISS plus raw hit/miss counts for that request cycle |
-| **`GET /api/v1/weather/cities/{city_id}/temperature-trend` response** | Per-city forecast cache HIT/MISS and remaining TTL |
-| **Dashboard UI** | Processed/raw cache panel on the dashboard; forecast cache badge in the trend modal |
 
 > [!TIP]
 > If Redis becomes unavailable, the caching layer catches errors, logs them, and gracefully falls back to querying OpenWeatherMap directly. Comfort responses are served with `cache.processed = "MISS"`; forecast requests still return data but with `cache.status = "MISS"`.
@@ -592,18 +563,6 @@ python -m compileall app
 * **Token Verification**: Enforced JWT validations on all FastAPI endpoints.
 * **CORS Allowed Origins**: Strict list matching allowed frontend hosts (`http://localhost:3000`).
 * **Error Sanitization**: Production builds suppress internal cache traces or stack errors.
-
----
-
-## Error Handling and Resilience
-* **OpenWeatherMap Outage**: Timeout configurations on the httpx client prevent requests from hanging. City service handles individual query failures without crashing the entire batch.
-* **Redis Outage**: Falls back to direct OpenWeatherMap lookups for current weather and forecast data; responses are still returned with cache status marked as `MISS`.
-* **Incorrect Input**: Filters out duplicates or missing configurations from `cities.json`.
-
----
-
-## Deployment
-No public deployment is currently included. The project can be run locally using the documented local or Docker Compose setups.
 
 ---
 
