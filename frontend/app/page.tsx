@@ -33,7 +33,6 @@ const mockTokyoCity = {
     humidity: 100.0,
     wind: 92.3,
     cloudiness: 100.0,
-    visibility: null
   }
 };
 

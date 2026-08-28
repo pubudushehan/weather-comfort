@@ -1,4 +1,3 @@
-from typing import Optional
 from pydantic import BaseModel
 from app.models.weather import ScoreBreakdown
 
@@ -30,23 +29,11 @@ def calculate_cloudiness_score(cloudiness: float) -> float:
 
     return max(0.0, 100.0 - ((cloudiness - 40) * 1.5))
 
-def calculate_visibility_score(visibility_m: Optional[int]) -> float:
-    if visibility_m is None:
-        return 70.0
-
-    visibility_km = visibility_m / 1000
-
-    if visibility_km >= 8:
-        return 100.0
-
-    return max(0.0, (visibility_km / 8) * 100)
-
 def calculate_comfort_index(
     temperature_c: float,
     humidity: float,
     wind_speed_mps: float,
-    cloudiness_percent: float,
-    visibility_m: Optional[int] = None
+    cloudiness_percent: float
 ) -> ComfortIndexResult:
     """
     Calculate overall Comfort Index Score and component breakdown.

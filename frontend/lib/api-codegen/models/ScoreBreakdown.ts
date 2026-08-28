@@ -19,9 +19,5 @@ export type ScoreBreakdown = {
      * Comfort score component for cloudiness (0-100)
      */
     cloudiness: number;
-    /**
-     * Optional comfort score component for visibility (0-100)
-     */
-    visibility?: (number | null);
 };
 

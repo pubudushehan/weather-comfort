@@ -116,7 +116,6 @@ class WeatherService:
                     humidity=float(humidity),
                     wind_speed_mps=wind_speed,
                     cloudiness_percent=float(cloudiness),
-                    visibility_m=visibility_m
                 )
 
                 weather_details = WeatherDetails(

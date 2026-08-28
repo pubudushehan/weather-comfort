@@ -13,10 +13,6 @@ export const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({ breakdown }) => 
     { label: "Cloudiness", val: breakdown.cloudiness, color: "bg-indigo-500" },
   ];
 
-  if (breakdown.visibility !== undefined && breakdown.visibility !== null) {
-    items.push({ label: "Visibility", val: breakdown.visibility, color: "bg-purple-500" });
-  }
-
   return (
     <div className="space-y-3 w-full">
       {items.map((item, idx) => (

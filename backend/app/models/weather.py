@@ -1,12 +1,10 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 
 class ScoreBreakdown(BaseModel):
     temperature: float = Field(..., description="Comfort score component for temperature (0-100)")
     humidity: float = Field(..., description="Comfort score component for humidity (0-100)")
     wind: float = Field(..., description="Comfort score component for wind speed (0-100)")
     cloudiness: float = Field(..., description="Comfort score component for cloudiness (0-100)")
-    visibility: Optional[float] = Field(None, description="Optional comfort score component for visibility (0-100)")
 
 class WeatherDetails(BaseModel):
     description: str = Field(..., description="Weather description text (e.g. overcast clouds)")

@@ -4,7 +4,6 @@ from app.services.comfort_service import (
     calculate_humidity_score,
     calculate_wind_score,
     calculate_cloudiness_score,
-    calculate_visibility_score
 )
 
 def test_ideal_conditions_produce_perfect_score():
@@ -162,10 +161,3 @@ def test_rounding_to_two_decimals():
     )
     
     assert result.total_score == 82.46
-
-def test_visibility_calculation():
-    # Check prepared but currently unused visibility calculations
-    assert calculate_visibility_score(None) == 70.0
-    assert calculate_visibility_score(10000) == 100.0 # 10km
-    assert calculate_visibility_score(4000) == 50.0  # 4km / 8km * 100 = 50.0
-    assert calculate_visibility_score(0) == 0.0
