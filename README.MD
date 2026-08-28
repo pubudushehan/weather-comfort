@@ -78,15 +78,9 @@ To maintain strict security boundaries and application integrity, all math calcu
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    U[User Browser] <-->|HTTPS / Session Cookie| F[Next.js Frontend Node Server]
-    F <-->|OAuth2 Flow / MFA| A[Auth0 Identity Provider]
-    F -->|Internal API Call + JWT Token| B[FastAPI Backend API]
-    B <-->|Cache JSON & Statistics| R[(Redis Cache Server)]
-    B -->|API GET Key Auth| O[OpenWeatherMap API]
-    B -->|Load Allowlist| C[cities.json]
-```
+![Architecture Diagram](docs/Architecture%20Diagram.png)
+
+_Architecture diagram: browser → frontend → Auth0 → backend → Redis → OpenWeatherMap_
 ---
 
 ## Request Flow
