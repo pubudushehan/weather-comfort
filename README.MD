@@ -427,6 +427,11 @@ The Comfort Index is calculated on the backend for each city, normalizing each p
 * **Tie-Breaker**: In the event of identical scores, cities are sorted alphabetically by name.
 
 ---
+#### Why This Formula?
+
+The Comfort Index turns different weather conditions into one simple score from 0 to 100, making it easy to compare which city feels most pleasant right now.
+
+It considers temperature, humidity, wind, and cloudiness because each affects how people experience weather outdoors. Temperature has the highest impact, while humidity, wind, and cloud cover fine-tune the result. The formula is a simple, transparent comfort guide—not a scientific rule—and is designed to give clear, consistent city rankings.
 
 ## Formula Rationale
 The formula is a research-informed but intentionally simplified product heuristic. Thermal-comfort standards and outdoor-comfort research recognize temperature, humidity, air movement, and environmental conditions as relevant factors. The exact thresholds and weights in this project are configurable calibration choices designed to produce a transparent and explainable city ranking.

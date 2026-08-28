@@ -5,6 +5,7 @@ from app.services.comfort_service import (
     calculate_wind_score,
     calculate_cloudiness_score,
 )
+import pytest
 
 def test_ideal_conditions_produce_perfect_score():
     # Ideal parameters: Temp 22°C (18-26 range), Humidity 50%, Wind 2 m/s (<=5 range), Clouds 20% (<=40 range)
@@ -147,17 +148,114 @@ def test_expected_arithmetic_weights():
     assert result.score_breakdown.cloudiness == 85.0
 
 def test_rounding_to_two_decimals():
-    # Temp 20.35°C -> 100 - (2.35 * 7) = 83.55
+    # Temp 28.35°C (2.35 above 26) -> 100 - (2.35 * 7) = 83.55
     # Humidity 61.3% -> 100 - (11.3 * 2) = 77.40
     # Wind 6.2 m/s -> 100 - (1.2 * 12) = 85.60
     # Cloudiness 50.8% -> 100 - (10.8 * 1.5) = 83.80
-    # Overall: 83.55 * 0.40 + 77.40 * 0.25 + 85.60 * 0.20 + 83.80 * 0.15 
+    # Overall: 83.55 * 0.40 + 77.40 * 0.25 + 85.60 * 0.20 + 83.80 * 0.15
     # = 33.42 + 19.35 + 17.12 + 12.57 = 82.46
     result = calculate_comfort_index(
-        temperature_c=28.35, # 2.35 above 26 -> 83.55
+        temperature_c=28.35,
         humidity=61.3,
         wind_speed_mps=6.2,
         cloudiness_percent=50.8
     )
-    
+
     assert result.total_score == 82.46
+    assert result.score_breakdown.temperature == 83.55
+    assert result.score_breakdown.humidity == 77.40
+    assert result.score_breakdown.wind == 85.60
+    assert result.score_breakdown.cloudiness == 83.80
+
+
+@pytest.mark.parametrize(
+    "temp_c,expected",
+    [
+        (18, 100.0),
+        (26, 100.0),
+        (22, 100.0),
+        (17, 93.0),
+        (27, 93.0),
+        (17.9, 99.3),
+        (26.1, 99.3),
+        (0, 0.0),
+    ],
+)
+def test_temperature_score_boundaries(temp_c, expected):
+    assert calculate_temperature_score(temp_c) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    "humidity,expected",
+    [
+        (50, 100.0),
+        (90, 20.0),
+        (10, 20.0),
+        (60, 80.0),
+        (40, 80.0),
+        (150, 0.0),
+    ],
+)
+def test_humidity_score_values(humidity, expected):
+    assert calculate_humidity_score(humidity) == expected
+
+
+def test_humidity_score_is_symmetric_around_ideal():
+    assert calculate_humidity_score(30) == calculate_humidity_score(70)
+
+
+@pytest.mark.parametrize(
+    "wind_speed,expected",
+    [
+        (0, 100.0),
+        (5, 100.0),
+        (5.01, 99.88),
+        (6, 88.0),
+        (10, 40.0),
+        (13.34, 0.0),
+    ],
+)
+def test_wind_score_boundaries(wind_speed, expected):
+    assert calculate_wind_score(wind_speed) == expected
+
+
+@pytest.mark.parametrize(
+    "cloudiness,expected",
+    [
+        (0, 100.0),
+        (40, 100.0),
+        (40.01, 99.985),
+        (50, 85.0),
+        (80, 40.0),
+        (106.67, 0.0),
+    ],
+)
+def test_cloudiness_score_boundaries(cloudiness, expected):
+    assert calculate_cloudiness_score(cloudiness) == expected
+
+
+def test_low_humidity_reduces_score():
+    result = calculate_comfort_index(
+        temperature_c=22.0,
+        humidity=10.0,
+        wind_speed_mps=2.0,
+        cloudiness_percent=20.0,
+    )
+
+    assert result.score_breakdown.humidity == 20.0
+    assert result.total_score == 80.0
+
+
+def test_comfort_index_returns_complete_breakdown():
+    result = calculate_comfort_index(
+        temperature_c=20.0,
+        humidity=60.0,
+        wind_speed_mps=6.0,
+        cloudiness_percent=50.0,
+    )
+
+    assert result.total_score == 90.35
+    assert result.score_breakdown.temperature == 100.0
+    assert result.score_breakdown.humidity == 80.0
+    assert result.score_breakdown.wind == 88.0
+    assert result.score_breakdown.cloudiness == 85.0
