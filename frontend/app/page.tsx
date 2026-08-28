@@ -6,21 +6,39 @@ import {
   ShieldCheck,
   Database,
   Thermometer,
-  Droplets,
-  Wind,
-  Cloud,
   ArrowRight,
   ChevronRight
 } from 'lucide-react';
-import { DashboardHeader } from '@/components/dashboard-header';
-import { ScoreBadge } from '@/components/score-badge';
-import { ScoreBreakdown } from '@/components/score-breakdown';
-import Image from 'next/image';
-import logoImg from '../public/Logo.png';
+import { DashboardHeader } from '@/components/NavBar';
+import { Footer } from '@/components/Footer';
+import { WeatherCard } from '@/components/weather-card';
+
+const mockTokyoCity = {
+  city_id: 1850147,
+  city_name: 'Tokyo',
+  country: 'JP',
+  rank: 1,
+  comfort_score: 85.40,
+  weather: {
+    description: 'clear sky',
+    temperature_c: 22.4,
+    humidity: 45,
+    pressure_hpa: 1012,
+    wind_speed_mps: 3.2,
+    cloudiness_percent: 0,
+    visibility_km: 10.0
+  },
+  score_breakdown: {
+    temperature: 82.5,
+    humidity: 100.0,
+    wind: 92.3,
+    cloudiness: 100.0,
+    visibility: null
+  }
+};
 
 export default function Home() {
   const { user, isLoading } = useUser();
-  const currentYear = new Date().getFullYear();
   const ctaUrl = user ? '/dashboard' : '/auth/login';
 
   const scrollToSection = (id: string) => {
@@ -88,71 +106,13 @@ export default function Home() {
 
             {/* Right Mock Card Preview Column */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="w-full max-w-[400px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xl dark:shadow-black/50 hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden flex flex-col justify-between select-none">
-                {/* Rank Indicator Badge */}
-                <div className="absolute top-0 right-0 bg-zinc-900 text-white dark:bg-zinc-800 px-4 py-1.5 rounded-bl-xl font-bold text-xs">
-                  Rank #1
-                </div>
-
-                <div>
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 flex items-baseline gap-1">
-                      Tokyo
-                      <span className="text-xs font-semibold text-zinc-400 uppercase">JP</span>
-                    </h3>
-                    <p className="text-sm text-zinc-500">Clear Skies</p>
-                  </div>
-
-                  {/* Comfort Score Dot */}
-                  <div className="mb-5">
-                    <ScoreBadge score={85.40} />
-                  </div>
-
-                  {/* Standard Weather Parameters Grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 text-xs">
-                      <Thermometer className="w-4 h-4 text-orange-500 shrink-0" />
-                      <div>
-                        <div className="text-zinc-400 font-medium">Temperature</div>
-                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">22.4°C</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 text-xs">
-                      <Droplets className="w-4 h-4 text-blue-500 shrink-0" />
-                      <div>
-                        <div className="text-zinc-400 font-medium">Humidity</div>
-                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">45%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 text-xs">
-                      <Wind className="w-4 h-4 text-teal-500 shrink-0" />
-                      <div>
-                        <div className="text-zinc-400 font-medium">Wind Speed</div>
-                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">3.2 m/s</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 text-xs">
-                      <Cloud className="w-4 h-4 text-indigo-500 shrink-0" />
-                      <div>
-                        <div className="text-zinc-400 font-medium">Cloudiness</div>
-                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">0%</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Comfort Components Breakdown */}
-                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
-                  <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Comfort Breakdown</h4>
-                  <ScoreBreakdown
-                    breakdown={{
-                      temperature: 82.5,
-                      humidity: 100.0,
-                      wind: 92.3,
-                      cloudiness: 100.0,
-                    }}
-                  />
-                </div>
+              <div className="w-full max-w-[400px] hover:scale-[1.02] transition-transform duration-300">
+                <WeatherCard 
+                  city={mockTokyoCity} 
+                  onViewTrend={() => {
+                    window.location.href = ctaUrl;
+                  }} 
+                />
               </div>
             </div>
           </div>
@@ -190,7 +150,7 @@ export default function Home() {
               </div>
               <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 mt-4 mb-2">Explainable Score</h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                A transparent, weighted 0–100 score calculated dynamically based on Temperature, Humidity, Wind, and Cloudiness.
+                A transparent, weighted (0-100) score calculated dynamically based on Temperature, Humidity, Wind, and Cloudiness.
               </p>
             </div>
 
@@ -371,30 +331,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <Image
-              src={logoImg}
-              alt="WeatherComfort Analytics Logo"
-              width={24}
-              height={24}
-              className="object-contain rounded"
-            />
-            <span className="font-bold text-sm text-zinc-900 dark:text-zinc-50 tracking-tight">
-              WeatherComfort Analytics
-            </span>
-          </div>
-
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm text-center md:text-left leading-normal">
-            Real-time multi-city comfort analysis and index ranking pipeline, engineered securely on the backend.
-          </p>
-
-          <div className="flex items-center gap-6 text-xs text-zinc-500 dark:text-zinc-400">
-            <span>© {currentYear} WeatherComfort Analytics. All rights reserved.</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

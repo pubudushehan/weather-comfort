@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    MIN_CITY_COUNT: int = 8
+    MIN_CITY_COUNT: int = 10
 
     OPENWEATHER_API_KEY: str
     OPENWEATHER_BASE_URL: str = "https://api.openweathermap.org/data/2.5"

@@ -19,7 +19,9 @@ def test_load_valid_cities(tmp_path):
             {"CityCode": "2147714", "CityName": "Sydney"},
             {"CityCode": "4930956", "CityName": "Boston"},
             {"CityCode": "1796236", "CityName": "Shanghai"},
-            {"CityCode": "3143244", "CityName": "Oslo"}
+            {"CityCode": "3143244", "CityName": "Oslo"},
+            {"CityCode": "2158177", "CityName": "Melbourne"},
+            {"CityCode": "5128581", "CityName": "New York"}
         ]
     }
     file_path = tmp_path / "cities_test.json"
@@ -29,8 +31,8 @@ def test_load_valid_cities(tmp_path):
     service = CityService(file_path=str(file_path))
     city_ids = service.get_city_ids()
     
-    assert len(city_ids) == 8
-    assert city_ids == [1248991, 1850147, 2644210, 2988507, 2147714, 4930956, 1796236, 3143244]
+    assert len(city_ids) == 10
+    assert city_ids == [1248991, 1850147, 2644210, 2988507, 2147714, 4930956, 1796236, 3143244, 2158177, 5128581]
 
 def test_missing_file():
     service = CityService(file_path="non_existent_file.json")
@@ -93,7 +95,9 @@ def test_skip_invalid_entries_and_deduplicate(tmp_path):
             {"CityCode": "2147714", "CityName": "Sydney"},
             {"CityCode": "4930956", "CityName": "Boston"},
             {"CityCode": "1796236", "CityName": "Shanghai"},
-            {"CityCode": "3143244", "CityName": "Oslo"}
+            {"CityCode": "3143244", "CityName": "Oslo"},
+            {"CityCode": "2158177", "CityName": "Melbourne"},
+            {"CityCode": "5128581", "CityName": "New York"}
         ]
     }
     file_path = tmp_path / "cities_skip_dedup.json"
@@ -103,5 +107,5 @@ def test_skip_invalid_entries_and_deduplicate(tmp_path):
     city_ids = service.get_city_ids()
     
     # Duplicate, malformed entries, and non-dicts are ignored or deduplicated.
-    assert len(city_ids) == 8
-    assert city_ids == [1248991, 1850147, 2644210, 2988507, 2147714, 4930956, 1796236, 3143244]
+    assert len(city_ids) == 10
+    assert city_ids == [1248991, 1850147, 2644210, 2988507, 2147714, 4930956, 1796236, 3143244, 2158177, 5128581]
