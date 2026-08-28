@@ -58,7 +58,7 @@ To maintain strict security boundaries and application integrity, all math calcu
 * **Identity Management & MFA**: Integration with Auth0 to support user logins, sign-outs, and multi-factor authentication (MFA).
 * **Responsive Dashboard**: Fully adaptive user interface supporting mobile and desktop views, unified theme selections (light/dark modes), and persistent UI preferences.
 * **Robust Docker Support**: A containerized local environment configured via Docker Compose to spin up Redis, the FastAPI backend, and the Next.js frontend with a single command.
-* **Comprehensive Test Coverage**: Python backend validation suite testing Cache adapters, Comfort index formulas, endpoints, and city data loaders.
+* **Comfort Index Unit Tests**: Pytest suite focused on the Comfort Index formula - component scorers, weighted totals, boundary values, clamping, and rounding (39 tests).
 
 ---
 
@@ -429,7 +429,8 @@ The Comfort Index is calculated on the backend for each city, normalizing each p
 ---
 
 ## Formula Rationale
-The formula is a research-informed but intentionally simplified product heuristic. Thermal-comfort standards and outdoor-comfort research recognize temperature, humidity, air movement, and environmental conditions as relevant factors. The exact thresholds and weights in this project are configurable calibration choices designed to produce a transparent and explainable city ranking.
+
+The formula is a research-informed but intentionally simplified product heuristic. Thermal-comfort standards and outdoor-comfort research recognize temperature, humidity, air movement, and environmental conditions as relevant factors. The exact thresholds and weights are configurable calibration choices designed to produce a transparent and explainable city ranking.
 
 This is not a medical, occupational, or universal physiological comfort standard.
 
@@ -437,11 +438,29 @@ This is not a medical, occupational, or universal physiological comfort standard
 - [ASHRAE Standard 55 Thermal Environmental Conditions](https://www.ashrae.org/)
 - [NOAA National Weather Service Heat Index Assessment](https://www.weather.gov/safety/heat-index)
 
-### Why This Formula?
+### Why These Four Factors?
 
-The Comfort Index turns different weather conditions into one simple score from 0 to 100, making it easy to compare which city feels most pleasant right now.
+The Comfort Index turns different weather conditions into one score from 0 to 100, making it easy to compare which city feels most pleasant right now. Each input maps to a common outdoor-comfort signal:
 
-It considers temperature, humidity, wind, and cloudiness because each affects how people experience weather outdoors. Temperature has the highest impact, while humidity, wind, and cloud cover fine-tune the result. The formula is a simple, transparent comfort guide not a scientific rule and is designed to give clear, consistent city rankings.
+* **Temperature** — the baseline thermal signal people notice first.
+* **Humidity** — shifts how warm or sticky the air feels at a given temperature.
+* **Wind** — can improve comfort with light airflow, but strong wind reduces it outdoors.
+* **Cloudiness** — affects sun exposure and brightness; useful as a secondary environmental modifier.
+
+### Reasoning Behind Variable Weights
+
+Weights were chosen to reflect **perceived impact**, not equal mathematical importance. They sum to `100%` so the final score stays intuitive and easy to explain in the UI.
+
+| Parameter | Weight | Why this weight |
+|---|---:|---|
+| **Temperature** | 40% | Strongest single driver of outdoor comfort. Small temperature changes usually affect rankings more than small changes in the other factors. ASHRAE-style comfort guidance also treats air temperature as the primary variable. |
+| **Humidity** | 25% | Second-largest influence because moisture strongly changes how temperature *feels*, especially in warm conditions (aligned with heat-index style thinking from NOAA guidance). |
+| **Wind Speed** | 20% | Meaningful but secondary. Light breeze helps; excessive wind quickly makes outdoor conditions worse, so it should influence rankings without overpowering temperature. |
+| **Cloudiness** | 15% | Smallest weight because it mainly moderates comfort through sun/shade and brightness rather than core thermal feel. It still matters, but less than the three factors above. |
+
+**Design intent:** prioritize the factors users most strongly associate with “comfortable weather,” while keeping the formula transparent enough to show a per-component breakdown on the dashboard.
+
+**What was intentionally not weighted:** composite indices such as heat index, wind chill, or UTCI were avoided in v1 to keep the scoring logic simple, inspectable, and easy to unit test.
 
 ---
 
@@ -489,14 +508,15 @@ Check processed cache (weather:processed:all)
 
 ## Testing
 
-* **Backend Test Framework**: Pytest with `pytest-asyncio`.
-* **Coverage Scope**: Comfort Index computations, raw/processed cache logic, city ID loading, OpenWeatherMap client, and API router validations.
-* **Isolation**: All external API calls and Redis connections are mocked in the test suite to ensure that tests can run offline.
+* **Backend Test Framework**: Pytest.
+* **Coverage Scope**: Comfort Index formula only — direct unit tests for each component scorer (`temperature`, `humidity`, `wind`, `cloudiness`), integration tests for weighted totals, boundary values, floor/ceiling clamping, and 2-decimal rounding.
+* **Test File**: `backend/tests/test_comfort_index.py` (39 tests).
+* **Isolation**: Pure function tests with no external API, Redis, or database dependencies.
 * **Run Tests**:
   ```bash
   cd backend
   source .venv/bin/activate
-  pytest
+  pytest tests/test_comfort_index.py -v
   ```
 
 ---
@@ -581,7 +601,7 @@ No public deployment is currently included. The project can be run locally using
 - [x] Server-side caching (raw and processed) is functional.
 - [x] Cache debug endpoint `/api/v1/cache/status` is accurate.
 - [x] Light and dark modes toggle and persist.
-- [x] Pytest suite passes successfully (37/37 passed).
+- [x] Pytest suite passes successfully (39/39 passed).
 - [x] Temperature trend forecast graphs show next 24 hours (8 points, 15-minute cache).
 - [x] Docker Compose launches the full stack cleanly.
 - [x] No secrets or API keys are committed.
