@@ -427,11 +427,6 @@ The Comfort Index is calculated on the backend for each city, normalizing each p
 * **Tie-Breaker**: In the event of identical scores, cities are sorted alphabetically by name.
 
 ---
-#### Why This Formula?
-
-The Comfort Index turns different weather conditions into one simple score from 0 to 100, making it easy to compare which city feels most pleasant right now.
-
-It considers temperature, humidity, wind, and cloudiness because each affects how people experience weather outdoors. Temperature has the highest impact, while humidity, wind, and cloud cover fine-tune the result. The formula is a simple, transparent comfort guide—not a scientific rule—and is designed to give clear, consistent city rankings.
 
 ## Formula Rationale
 The formula is a research-informed but intentionally simplified product heuristic. Thermal-comfort standards and outdoor-comfort research recognize temperature, humidity, air movement, and environmental conditions as relevant factors. The exact thresholds and weights in this project are configurable calibration choices designed to produce a transparent and explainable city ranking.
@@ -441,6 +436,12 @@ This is not a medical, occupational, or universal physiological comfort standard
 *Reference guidelines:*
 - [ASHRAE Standard 55 Thermal Environmental Conditions](https://www.ashrae.org/)
 - [NOAA National Weather Service Heat Index Assessment](https://www.weather.gov/safety/heat-index)
+
+### Why This Formula?
+
+The Comfort Index turns different weather conditions into one simple score from 0 to 100, making it easy to compare which city feels most pleasant right now.
+
+It considers temperature, humidity, wind, and cloudiness because each affects how people experience weather outdoors. Temperature has the highest impact, while humidity, wind, and cloud cover fine-tune the result. The formula is a simple, transparent comfort guide not a scientific rule and is designed to give clear, consistent city rankings.
 
 ---
 
@@ -585,11 +586,3 @@ No public deployment is currently included. The project can be run locally using
 - [x] Docker Compose launches the full stack cleanly.
 - [x] No secrets or API keys are committed.
 
----
-
-## Assignment Submission Notes
-1. Push repository changes to GitHub or GitLab.
-2. Grant access permissions to the Fidenz reviewers.
-3. Record an unedited walkthrough video showing the login, dashboard data, cache debug status, theme changes, and mobile rendering.
-4. Upload the recording to Google Drive with sharing set to "Anyone with the link".
-5. Send the video and repository URLs in your final submission email.
