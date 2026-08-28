@@ -1,6 +1,6 @@
 # WeatherComfort Analytics
 
-WeatherComfort Analytics is a secure, full-stack weather analytics application that retrieves real-time weather data for a predefined list of global cities, computes an outdoor comfort rating using a custom backend-owned formula, and displays them ranked in a responsive dashboard. The system features server-side caching, secure user authentication through Auth0, and containerized deployment support.
+WeatherComfort Analytics is a secure, full-stack weather analytics application that retrieves real-time weather data for a predefined list of global cities, computes an outdoor comfort rating using a custom backend-owned formula, and displays them ranked in a responsive dashboard. The system features three-layer Redis server-side caching (raw weather, processed rankings, and forecast trends), secure user authentication through Auth0, and containerized deployment support.
 
 <!-- Add screenshots or demo links here before submission -->
 
@@ -34,7 +34,6 @@ WeatherComfort Analytics is a secure, full-stack weather analytics application t
 27. [Known Limitations](#known-limitations)
 28. [Future Improvements](#future-improvements)
 29. [Project Verification Checklist](#project-verification-checklist)
-30. [Assignment Submission Notes](#assignment-submission-notes)
 
 ---
 
@@ -43,18 +42,16 @@ WeatherComfort Analytics aims to help users find the most comfortable outdoor en
 
 To maintain strict security boundaries and application integrity, all math calculations and sorting are performed exclusively by the backend. The frontend is a presentation layer that displays these rankings securely once the user is authenticated via Auth0.
 
-> [!NOTE]
-> The Comfort Index Score is a research-informed product heuristic designed to rank environments based on typical human comfort ranges. It is not a medical, occupational, or physiological health standard.
-
 ---
 
 ## Core Features
 * **Predefined City Registry**: City identifiers are loaded securely on the backend from [cities.json](file:///Users/pubudushehan/Desktop/Programming/weather-comfort/backend/app/data/cities.json) containing at least 10 valid city codes.
 * **Backend Comfort Calculations**: Current weather data is retrieved from OpenWeatherMap, and normalized component ratings are computed on the server.
-* **Dual-Layer Caching**: Uses Redis server-side caching:
-  - Raw weather responses are cached for 300 seconds (5 minutes).
-  - Processed and ranked comfort indexes are cached for 60 seconds (1 minute).
-* **Cache Telemetry**: Provides a dedicated cache status debug endpoint (/api/v1/cache/status) reporting hits, misses, and remaining TTLs.
+* **Three-Layer Redis Caching**: Minimizes OpenWeatherMap calls and dashboard latency using separate cache layers:
+  - **Raw current weather** (`weather:raw:{city_id}`) — 300 seconds (5 minutes).
+  - **Processed comfort rankings** (`weather:processed:all`) — 60 seconds (1 minute).
+  - **Forecast / temperature trend** (`weather:forecast:{city_id}`) — 900 seconds (15 minutes).
+* **Cache Telemetry**: Dashboard cache stats via `/api/v1/cache/status` (processed TTL + raw hit/miss counters). Per-request cache HIT/MISS and TTL are also returned in comfort and temperature-trend API responses and shown in the UI.
 * **Identity Management & MFA**: Integration with Auth0 to support user logins, sign-outs, and multi-factor authentication (MFA).
 * **Responsive Dashboard**: Fully adaptive user interface supporting mobile and desktop views, unified theme selections (light/dark modes), and persistent UI preferences.
 * **Robust Docker Support**: A containerized local environment configured via Docker Compose to spin up Redis, the FastAPI backend, and the Next.js frontend with a single command.
@@ -97,7 +94,7 @@ flowchart TD
 ### Responsibility Breakdown
 * **Next.js Frontend**: Manages browser-facing interactions, enforces client-side route guards, performs OAuth authentication handshakes, and queries the backend.
 * **FastAPI Backend**: Acts as the single source of truth for the Comfort Index calculations, handles JWT validation, connects to Redis, and queries OpenWeatherMap.
-* **Redis**: Acts as the server-side cache authority, saving raw and processed results to prevent API rate-limit exhaustion and reduce query latency.
+* **Redis**: Acts as the server-side cache authority, storing raw weather payloads, processed ranking responses, and per-city forecast data to prevent API rate-limit exhaustion and reduce query latency.
 * **Auth0**: Manages user identity verification, enforces Multi-Factor Authentication (MFA), and handles user account registrations securely.
 * **OpenWeatherMap**: Serves as the primary external data provider for current meteorological data.
 
@@ -118,6 +115,15 @@ flowchart TD
 8. **Index Computation**: The backend normalizes weather attributes, calculates component comfort scores and weighted averages, and rounds outputs to 2 decimal places.
 9. **Ranking and Sorting**: Cities are sorted by Comfort Score descending, assigned ranks, and the result is cached in Redis for 60 seconds.
 10. **Render**: The backend returns a typed response, and the frontend displays the cards in the browser.
+
+### Temperature Trend Request Flow
+
+1. **Open Trend Modal**: The user clicks "View temperature trend" on a city card or table row.
+2. **Forecast Request**: The frontend calls `GET /api/v1/weather/cities/{city_id}/temperature-trend` with a JWT.
+3. **Forecast Cache Check**: The backend queries Redis for `weather:forecast:{city_id}`.
+4. **OpenWeatherMap Forecast Fetch**: On cache MISS, the backend fetches the 5-day / 3-hour forecast from OpenWeatherMap and caches it for 900 seconds (15 minutes).
+5. **Normalize & Return**: The backend returns the next 8 forecast points (24 hours) plus per-response cache metadata (`HIT`/`MISS`, TTL).
+6. **Render Chart**: The trend modal displays the line chart and cache status badge.
 
 ---
 
@@ -196,6 +202,7 @@ OPENWEATHER_TIMEOUT_SECONDS=10
 REDIS_URL=redis://localhost:6379/0
 CACHE_RAW_TTL_SECONDS=300
 CACHE_PROCESSED_TTL_SECONDS=60
+# Forecast cache TTL is currently fixed at 900 seconds (15 minutes) in application code.
 
 AUTH0_DOMAIN=your-auth0-tenant.us.auth0.com
 AUTH0_AUDIENCE=https://weather-comfort-api
@@ -360,7 +367,7 @@ Ensure Docker Desktop is running, then execute the following commands in the roo
 |---|---|---|---|
 | **GET** | `/health` | No | Public endpoint verifying api status |
 | **GET** | `/api/v1/weather/comfort` | Yes (JWT Token) | Fetches, computes, and returns ranked comfort indexes |
-| **GET** | `/api/v1/cache/status` | Yes (JWT Token) | Debug endpoint returning raw hits/misses and TTL details |
+| **GET** | `/api/v1/cache/status` | Yes (JWT Token) | Debug endpoint for processed cache key/TTL and cumulative raw cache hit/miss counters |
 
 ### Example Request
 ```http
@@ -466,9 +473,20 @@ Weights were chosen to reflect **perceived impact**, not equal mathematical impo
 
 ## Caching Design
 
-Server-side caching is utilized to minimize latency, prevent redundant database lookups, and protect OpenWeatherMap API rate limits. Redis is preferred over local in-memory dictionaries to ensure state consistency across scaled uvicorn processes.
+Server-side caching minimizes latency, avoids redundant OpenWeatherMap calls, and protects API rate limits. Redis is preferred over local in-memory dictionaries so cache state stays consistent across scaled uvicorn processes.
 
-### Caching Flow
+### Cache Layers
+
+| Layer | Redis Key | TTL | Purpose | Used By |
+|---|---|---:|---|---|
+| **Raw current weather** | `weather:raw:{city_id}` | 300s (5 min) | Stores the raw OpenWeatherMap `/weather` JSON per city | Comfort ranking flow |
+| **Processed rankings** | `weather:processed:all` | 60s (1 min) | Stores the fully ranked comfort dashboard response | `GET /api/v1/weather/comfort` |
+| **Forecast trend** | `weather:forecast:{city_id}` | 900s (15 min) | Stores the raw OpenWeatherMap `/forecast` JSON per city | `GET /api/v1/weather/cities/{city_id}/temperature-trend` |
+
+Raw and processed TTLs are configurable via `CACHE_RAW_TTL_SECONDS` and `CACHE_PROCESSED_TTL_SECONDS`. Forecast TTL is currently hardcoded to `900` seconds in `WeatherService`.
+
+### Comfort Ranking Cache Flow
+
 ```text
 Request to /weather/comfort
   ↓
@@ -478,16 +496,40 @@ Check processed cache (weather:processed:all)
         ↓
     Loop through cities in cities.json
     Check raw cache (weather:raw:{city_id})
-        ├── HIT  → Retrieve raw weather data (300s TTL)
-        └── MISS → Fetch from OpenWeatherMap & save to Redis
+        ├── HIT  → Increment stats:raw:hits, reuse raw weather JSON (300s TTL)
+        └── MISS → Increment stats:raw:misses, fetch /weather from OpenWeatherMap & save to Redis
         ↓
     Calculate Comfort Scores & Rank Cities
     Save output to processed cache (weather:processed:all)
-    Return response
+    Return response with cache.processed = "MISS", raw_hits, raw_misses
 ```
 
+### Temperature Trend Cache Flow
+
+```text
+Request to /weather/cities/{city_id}/temperature-trend
+  ↓
+Validate city_id against cities.json allowlist
+  ↓
+Check forecast cache (weather:forecast:{city_id})
+  ├── HIT  → Read cached forecast JSON (900s TTL)
+  └── MISS → Fetch /forecast from OpenWeatherMap & save to Redis
+        ↓
+Extract next 8 points (24 hours at 3-hour intervals)
+Return TemperatureTrendResponse with cache.status and cache.ttl_seconds
+```
+
+### Cache Telemetry
+
+| Surface | What it reports |
+|---|---|
+| **`GET /api/v1/cache/status`** | Processed cache key (`weather:processed:all`), HIT/MISS, TTL; cumulative raw cache hits/misses (`stats:raw:hits`, `stats:raw:misses`) |
+| **`GET /api/v1/weather/comfort` response** | Per-request processed HIT/MISS plus raw hit/miss counts for that request cycle |
+| **`GET /api/v1/weather/cities/{city_id}/temperature-trend` response** | Per-city forecast cache HIT/MISS and remaining TTL |
+| **Dashboard UI** | Processed/raw cache panel on the dashboard; forecast cache badge in the trend modal |
+
 > [!TIP]
-> If Redis becomes unavailable, the caching system catches the error, logs it, and gracefully falls back to querying OpenWeatherMap directly, serving the response with a status `cache.processed = "MISS"`.
+> If Redis becomes unavailable, the caching layer catches errors, logs them, and gracefully falls back to querying OpenWeatherMap directly. Comfort responses are served with `cache.processed = "MISS"`; forecast requests still return data but with `cache.status = "MISS"`.
 
 ---
 
@@ -524,8 +566,8 @@ Check processed cache (weather:processed:all)
 ## Temperature Trend Graphs
 * **Backend Forecast Endpoint**: Exposes a secure API endpoint (`GET /api/v1/weather/cities/{city_id}/temperature-trend`) that requires Auth0 authentication and verifies the city code is present in the approved allowlist.
 * **Forecast Query**: Retrieves weather forecasts using the OpenWeatherMap 5-day / 3-hour forecast API (`/forecast`), returning the next 24 hours of data represented as 8 data points at 3-hour intervals. Note that this is forecast data, not historical data.
-* **Forecast Cache**: Saves the raw forecast data under a dedicated Redis cache key (`weather:forecast:{city_id}`) with a Time-to-Live (TTL) of 900 seconds (15 minutes).
-* **Responsive Line Charts**: Displays forecast trends inside a modal overlay when the user clicks the "View temperature trend" button on any city card or ranking list row. The chart uses Recharts to render Celsius values over time with adaptive themes, interactive tooltips, loading skeleton screens, retry error handlers, and min/max summarized bounds.
+* **Forecast Cache**: Uses the third Redis cache layer — key `weather:forecast:{city_id}`, TTL **900 seconds (15 minutes)**. See [Caching Design](#caching-design) for the full flow.
+* **Responsive Line Charts**: Displays forecast trends inside a modal overlay when the user clicks the "View temperature trend" button on any city card or ranking list row. The chart uses Recharts to render Celsius values over time with adaptive themes, interactive tooltips, loading skeleton screens, retry error handlers, min/max summarized bounds, and a forecast cache status badge (`HIT`/`MISS` + TTL).
 
 ---
 
@@ -555,7 +597,7 @@ python -m compileall app
 
 ## Error Handling and Resilience
 * **OpenWeatherMap Outage**: Timeout configurations on the httpx client prevent requests from hanging. City service handles individual query failures without crashing the entire batch.
-* **Redis Outage**: Falls back to direct weather lookups gracefully.
+* **Redis Outage**: Falls back to direct OpenWeatherMap lookups for current weather and forecast data; responses are still returned with cache status marked as `MISS`.
 * **Incorrect Input**: Filters out duplicates or missing configurations from `cities.json`.
 
 ---
@@ -568,7 +610,7 @@ No public deployment is currently included. The project can be run locally using
 ## Trade-offs and Design Decisions
 
 * **FastAPI + Next.js separation**: Enables clean separation of concerns, letting Next.js focus on client state and FastAPI on index calculations and data processing.
-* **Redis Caching**: Adding Redis adds a service dependency, but it protects third-party rate limits and improves speed.
+* **Redis Caching (three layers)**: Adds a service dependency, but separates raw weather (5 min), processed rankings (1 min), and forecast trends (15 min) so each data type can expire at an appropriate rate while protecting third-party API limits.
 * **No Database**: A relational database is omitted because the application is designed to calculate scores from real-time weather data and predefined city lists.
 * **Static City Allowlist**: City codes are loaded from a backend config file to prevent arbitrary inputs.
 
@@ -598,11 +640,11 @@ No public deployment is currently included. The project can be run locally using
 - [x] Dashboard route `/dashboard` is protected.
 - [x] Predefined cities are loaded and comfort scores are calculated.
 - [x] Cities are sorted and ranked in descending order.
-- [x] Server-side caching (raw and processed) is functional.
-- [x] Cache debug endpoint `/api/v1/cache/status` is accurate.
+- [x] Server-side caching (raw, processed, and forecast layers) is functional.
+- [x] Cache debug endpoint `/api/v1/cache/status` is accurate for processed cache and raw hit/miss counters.
 - [x] Light and dark modes toggle and persist.
 - [x] Pytest suite passes successfully (39/39 passed).
-- [x] Temperature trend forecast graphs show next 24 hours (8 points, 15-minute cache).
+- [x] Temperature trend forecast graphs show next 24 hours (8 points) with 15-minute forecast cache (`weather:forecast:{city_id}`).
 - [x] Docker Compose launches the full stack cleanly.
 - [x] No secrets or API keys are committed.
 
