@@ -20,6 +20,26 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Generate Routes and Models Automatically using openapi.json
+
+To generate routes and models automatically, you can use the `openapi-generator-cli` tool. This tool reads the `openapi.json` file and generates TypeScript types and API routes based on the OpenAPI specification.
+
+### Installation
+
+You can install the `openapi-generator-cli` globally or as a dev dependency in your project:
+
+```bash
+npm install -g openapi-typescript-codegen
+# or
+npm install --save-dev openapi-typescript-codegen
+```
+### Usage
+You can generate the API routes and models by running the following command:
+
+```bash
+npx openapi-typescript-codegen --input ./openapi.json --output app/api
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

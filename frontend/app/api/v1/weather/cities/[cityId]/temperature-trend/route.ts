@@ -1,5 +1,6 @@
 import { auth0 } from '@/lib/auth0';
 import { NextRequest, NextResponse } from 'next/server';
+import { WeatherComfortClient } from '@/lib/api-codegen';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,25 +13,21 @@ export async function GET(
     const { cityId } = await params;
     const apiBaseUrl = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
-    const res = await fetch(`${apiBaseUrl}/api/v1/weather/cities/${cityId}/temperature-trend`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: 'no-store'
+    const client = new WeatherComfortClient({
+      BASE: apiBaseUrl,
+      TOKEN: token,
     });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      return NextResponse.json(errorData, { status: res.status });
-    }
-
-    const data = await res.json();
+    const data = await client.default.getTemperatureTrendApiV1WeatherCitiesCityIdTemperatureTrendGet(
+      Number(cityId)
+    );
     return NextResponse.json(data);
   } catch (error: unknown) {
-    console.error("Proxy temperature trend query failed:", error);
+    const err = error as { body?: { detail?: string }; message?: string; status?: number };
+    console.error("Proxy temperature trend query failed:", err);
     return NextResponse.json(
-      { detail: "Invalid authentication credentials" },
-      { status: 401 }
+      { detail: err.body?.detail || err.message || "Invalid authentication credentials" },
+      { status: err.status || 401 }
     );
   }
 }
