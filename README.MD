@@ -510,6 +510,36 @@ Return TemperatureTrendResponse with cache.status and cache.ttl_seconds
 * **Theme Switching**: Includes a theme toggle (sun/moon icons) to switch between light and dark modes. Theme choices are persisted across page reloads.
 * **Resilient States**: Gracefully displays skeletons during loading states and custom panels with reload options during network or authorization failures.
 
+### Landing Page
+
+<table>
+  <tr>
+    <td align="center"><strong>🌙 Dark Mode</strong></td>
+    <td align="center"><strong>☀️ Light Mode</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/Landing%20page%20dark.png" alt="Landing Page Dark Mode" /></td>
+    <td><img src="docs/Landing%20page%20light.png" alt="Landing Page Light Mode" /></td>
+  </tr>
+</table>
+
+### Dashboard
+
+<table>
+  <tr>
+    <td align="center"><strong>🌙 Dark Mode</strong></td>
+    <td align="center"><strong>☀️ Light Mode</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/Dashboard%20dark.png" alt="Dashboard Dark Mode" /></td>
+    <td><img src="docs/Dashboard%20light.png" alt="Dashboard Light Mode" /></td>
+  </tr>
+</table>
+
+### Temperature Trend Graph
+
+![Temperature Trend Graph](docs/Temperature%20graph.png)
+
 ---
 
 ## Testing
