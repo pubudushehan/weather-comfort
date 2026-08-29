@@ -80,7 +80,6 @@ To maintain strict security boundaries and application integrity, all math calcu
 
 ![Architecture Diagram](docs/Architecture%20Diagram.png)
 
-_Architecture diagram: browser → frontend → Auth0 → backend → Redis → OpenWeatherMap_
 ---
 
 ## Request Flow
