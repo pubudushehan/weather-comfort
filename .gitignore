@@ -6,6 +6,9 @@
 
 # Guidelines
 GUIDELINE.md
+Flow.md
+command.md
+code-quality-review.md
 
 # Node
 node_modules/
