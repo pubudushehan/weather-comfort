@@ -459,37 +459,11 @@ Server-side caching minimizes latency, avoids redundant OpenWeatherMap calls, an
 
 ### Comfort Ranking Cache Flow
 
-```text
-Request to /weather/comfort
-  ↓
-Check processed cache (weather:processed:all)
-  ├── HIT  → Return cached ranking JSON instantly (60s TTL)
-  └── MISS
-        ↓
-    Loop through cities in cities.json
-    Check raw cache (weather:raw:{city_id})
-        ├── HIT  → Increment stats:raw:hits, reuse raw weather JSON (300s TTL)
-        └── MISS → Increment stats:raw:misses, fetch /weather from OpenWeatherMap & save to Redis
-        ↓
-    Calculate Comfort Scores & Rank Cities
-    Save output to processed cache (weather:processed:all)
-    Return response with cache.processed = "MISS", raw_hits, raw_misses
-```
+![Comfort Ranking Cache Flow](docs/Comfort%20Ranking%20Cache%20Flow.png)
 
 ### Temperature Trend Cache Flow
 
-```text
-Request to /weather/cities/{city_id}/temperature-trend
-  ↓
-Validate city_id against cities.json allowlist
-  ↓
-Check forecast cache (weather:forecast:{city_id})
-  ├── HIT  → Read cached forecast JSON (900s TTL)
-  └── MISS → Fetch /forecast from OpenWeatherMap & save to Redis
-        ↓
-Extract next 8 points (24 hours at 3-hour intervals)
-Return TemperatureTrendResponse with cache.status and cache.ttl_seconds
-```
+![Temperature Trend Cache Flow](docs/Temperature%20Trend%20Cache%20Flow.png)
 
 > [!TIP]
 > If Redis becomes unavailable, the caching layer catches errors, logs them, and gracefully falls back to querying OpenWeatherMap directly. Comfort responses are served with `cache.processed = "MISS"`; forecast requests still return data but with `cache.status = "MISS"`.
